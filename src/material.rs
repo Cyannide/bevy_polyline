@@ -65,6 +65,9 @@ pub struct PolylineMaterial {
     ///
     /// Note that `depth_bias` **does not** interact with this in any way.
     pub perspective: bool,
+
+    // Whether to render round joins and caps, with a radius of half the line width.
+    pub joins: bool,
 }
 
 impl Default for PolylineMaterial {
@@ -74,6 +77,7 @@ impl Default for PolylineMaterial {
             color: Color::WHITE.to_linear(),
             depth_bias: 0.0,
             perspective: false,
+            joins: false,
         }
     }
 }
@@ -113,6 +117,7 @@ pub struct GpuPolylineMaterial {
     pub perspective: bool,
     pub bind_group: BindGroup,
     pub alpha_mode: AlphaMode,
+    pub joins: bool,
 }
 
 impl RenderAsset for GpuPolylineMaterial {
@@ -162,6 +167,7 @@ impl RenderAsset for GpuPolylineMaterial {
             perspective: polyline_material.perspective,
             alpha_mode,
             bind_group,
+            joins: polyline_material.joins,
         })
     }
 }
@@ -220,6 +226,15 @@ impl SpecializedRenderPipeline for PolylineMaterialPipeline {
                 .shader_defs
                 .push("POLYLINE_PERSPECTIVE".into());
         }
+
+        if key.contains(PolylinePipelineKey::JOINS) {
+            descriptor.vertex.shader_defs.push("JOINS".into());
+
+            if let Some(ref mut fragment) = descriptor.fragment {
+                fragment.shader_defs.push("JOINS".into());
+            }
+        }
+
         descriptor.layout = vec![
             self.polyline_pipeline.view_layout.clone(),
             self.polyline_pipeline.polyline_layout.clone(),
@@ -361,6 +376,9 @@ pub fn queue_material_polylines(
             }
             if material.perspective {
                 polyline_key |= PolylinePipelineKey::PERSPECTIVE
+            }
+            if material.joins {
+                polyline_key |= PolylinePipelineKey::JOINS
             }
             let pipeline_id =
                 pipelines.specialize(&pipeline_cache, &material_pipeline, polyline_key);
