@@ -10,7 +10,6 @@ use bevy::{
     },
     mesh::VertexBufferLayout,
     prelude::*,
-    reflect::TypePath,
     render::{
         extract_component::{ComponentUniforms, DynamicUniformIndex, UniformComponentPlugin},
         render_asset::{PrepareAssetError, RenderAsset, RenderAssetPlugin, RenderAssets},
@@ -284,6 +283,7 @@ bitflags::bitflags! {
         const NONE = 0;
         const PERSPECTIVE = (1 << 0);
         const TRANSPARENT_MAIN_PASS = (1 << 1);
+        const JOINS = (1 << 2);
         const MSAA_RESERVED_BITS = Self::MSAA_MASK_BITS << Self::MSAA_SHIFT_BITS;
     }
 }
