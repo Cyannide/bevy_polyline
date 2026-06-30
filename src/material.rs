@@ -5,11 +5,13 @@ use crate::polyline::{
 
 use bevy::{
     core_pipeline::{
-        core_3d::{AlphaMask3d, Opaque3d, Opaque3dBatchSetKey, Opaque3dBinKey, Transparent3d},
+        core_3d::{
+            AlphaMask3d, Opaque3d, Opaque3dBatchSetKey, Opaque3dBinKey, Transparent3d,
+            TransparentSortingInfo3d,
+        },
         prepass::{OpaqueNoLightmap3dBatchSetKey, OpaqueNoLightmap3dBinKey},
     },
     ecs::{
-        change_detection::Tick,
         query::ROQueryItem,
         system::{
             lifetimeless::{Read, SRes},
@@ -292,7 +294,6 @@ pub fn queue_material_polylines(
     mut opaque_phases: ResMut<ViewBinnedRenderPhases<Opaque3d>>,
     mut alpha_mask_phases: ResMut<ViewBinnedRenderPhases<AlphaMask3d>>,
     mut transparent_phases: ResMut<ViewSortedRenderPhases<Transparent3d>>,
-    mut next_tick: Local<Tick>,
 ) {
     let draw_opaque = opaque_draw_functions.read().id::<DrawPolylineMaterial>();
     let draw_alpha_mask = alpha_mask_draw_functions
@@ -306,9 +307,13 @@ pub fn queue_material_polylines(
         let inverse_view_matrix = view.world_from_view.to_matrix().inverse();
         let inverse_view_row_2 = inverse_view_matrix.row(2);
 
+        let Some(polyline_visible_entities) = visible_entities.get::<PolylineHandle>() else {
+            continue;
+        };
+
         let mut polyline_key = PolylinePipelineKey::from_msaa_samples(msaa.samples());
-        polyline_key |= PolylinePipelineKey::from_hdr(view.hdr);
-        for (visible_entity, visible_main_entity) in visible_entities.get::<PolylineHandle>() {
+        polyline_key |= PolylinePipelineKey::from_target_format(view.target_format);
+        for (visible_entity, visible_main_entity) in polyline_visible_entities.iter_visible() {
             let Ok((material_handle, polyline_uniform)) = material_meshes.get(*visible_entity)
             else {
                 continue;
@@ -333,9 +338,6 @@ pub fn queue_material_polylines(
                 continue;
             };
 
-            let this_tick = next_tick.get() + 1;
-            next_tick.set(this_tick);
-
             match material.alpha_mode {
                 AlphaMode::Opaque => {
                     opaque_phase.add(
@@ -344,8 +346,7 @@ pub fn queue_material_polylines(
                             draw_function: draw_opaque,
                             material_bind_group_index: None,
                             lightmap_slab: None,
-                            vertex_slab: default(),
-                            index_slab: None,
+                            slabs: default(),
                         },
                         Opaque3dBinKey {
                             // The draw command doesn't use a mesh handle so we don't need an `asset_id`
@@ -354,7 +355,6 @@ pub fn queue_material_polylines(
                         (*visible_entity, *visible_main_entity),
                         InputUniformIndex::default(),
                         BinnedRenderPhaseType::NonMesh,
-                        *next_tick,
                     );
                 }
                 AlphaMode::Mask(_) => {
@@ -363,8 +363,7 @@ pub fn queue_material_polylines(
                             draw_function: draw_alpha_mask,
                             pipeline: pipeline_id,
                             material_bind_group_index: None,
-                            vertex_slab: default(),
-                            index_slab: None,
+                            slabs: default(),
                         },
                         OpaqueNoLightmap3dBinKey {
                             asset_id: AssetId::<Mesh>::invalid().untyped(),
@@ -372,7 +371,6 @@ pub fn queue_material_polylines(
                         (*visible_entity, *visible_main_entity),
                         InputUniformIndex::default(),
                         BinnedRenderPhaseType::NonMesh,
-                        *next_tick,
                     );
                 }
                 AlphaMode::Blend
@@ -382,7 +380,12 @@ pub fn queue_material_polylines(
                     // NOTE: row 2 of the inverse view matrix dotted with column 3 of the model matrix
                     // gives the z component of translation of the mesh in view space
                     let polyline_z = inverse_view_row_2.dot(polyline_uniform.transform.col(3));
-                    transparent_phase.add(Transparent3d {
+                    transparent_phase.add_retained(Transparent3d {
+                        sorting_info: TransparentSortingInfo3d::Sorted {
+                            mesh_center: (inverse_view_matrix * polyline_uniform.transform.col(3))
+                                .truncate(),
+                            depth_bias: 0.0,
+                        },
                         entity: (*visible_entity, *visible_main_entity),
                         draw_function: draw_transparent,
                         pipeline: pipeline_id,
