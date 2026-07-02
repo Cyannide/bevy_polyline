@@ -17,8 +17,8 @@ fn setup(
     mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
     mut polylines: ResMut<Assets<Polyline>>,
 ) {
-    commands.spawn(PolylineBundle {
-        polyline: PolylineHandle(polylines.add(Polyline {
+    commands.spawn((
+        PolylineHandle(polylines.add(Polyline {
             vertices: vec![
                 Vec3::new(-0.5, -0.5, -0.5),
                 Vec3::new(0.5, -0.5, -0.5),
@@ -30,15 +30,14 @@ fn setup(
                 Vec3::new(-0.5, -0.5, 0.5),
             ],
         })),
-        material: PolylineMaterialHandle(polyline_materials.add(PolylineMaterial {
+        PolylineMaterialHandle(polyline_materials.add(PolylineMaterial {
             width: 2.0,
             color: RED.into(),
             perspective: false,
             // Bias the line toward the camera so the line at the cube-plane intersection is visible
             depth_bias: -0.0002,
         })),
-        ..Default::default()
-    });
+    ));
 
     // circular base
     commands.spawn((

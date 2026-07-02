@@ -14,18 +14,17 @@ fn setup(
     mut polyline_materials: ResMut<Assets<PolylineMaterial>>,
     mut polylines: ResMut<Assets<Polyline>>,
 ) {
-    commands.spawn(PolylineBundle {
-        polyline: PolylineHandle(polylines.add(Polyline {
+    commands.spawn((
+        PolylineHandle(polylines.add(Polyline {
             vertices: vec![-Vec3::ONE, Vec3::ONE],
         })),
-        material: PolylineMaterialHandle(polyline_materials.add(PolylineMaterial {
+        PolylineMaterialHandle(polyline_materials.add(PolylineMaterial {
             width: 10.0,
             color: RED.into(),
             perspective: false,
             ..default()
         })),
-        ..default()
-    });
+    ));
 
     // camera
     commands.spawn((

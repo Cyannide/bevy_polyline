@@ -60,25 +60,22 @@ fn setup(
                 ..Default::default()
             },
             Trail(ConstGenericRingBuffer::<Vec3A, TRAIL_LENGTH>::new()),
-            PolylineBundle {
-                polyline: PolylineHandle(polylines.add(Polyline {
-                    vertices: Vec::with_capacity(TRAIL_LENGTH),
-                })),
-                material: PolylineMaterialHandle(
-                    polyline_materials.add(PolylineMaterial {
-                        width: (size * 0.1).powf(1.8),
-                        color: Color::hsl(
-                            rng.random_range(0.0..360.0),
-                            1.0,
-                            rng.random_range(1.2..3.0),
-                        )
-                        .to_linear(),
-                        perspective: true,
-                        ..Default::default()
-                    }),
-                ),
-                ..Default::default()
-            },
+            PolylineHandle(polylines.add(Polyline {
+                vertices: Vec::with_capacity(TRAIL_LENGTH),
+            })),
+            PolylineMaterialHandle(
+                polyline_materials.add(PolylineMaterial {
+                    width: (size * 0.1).powf(1.8),
+                    color: Color::hsl(
+                        rng.random_range(0.0..360.0),
+                        1.0,
+                        rng.random_range(1.2..3.0),
+                    )
+                    .to_linear(),
+                    perspective: true,
+                    ..Default::default()
+                }),
+            ),
         ));
     }
 

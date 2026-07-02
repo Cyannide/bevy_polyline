@@ -13,6 +13,7 @@ pub mod polyline;
 
 pub mod prelude {
     pub use crate::material::{PolylineMaterial, PolylineMaterialHandle};
+    #[allow(deprecated)]
     pub use crate::polyline::{Polyline, PolylineBundle, PolylineHandle};
     pub use crate::PolylinePlugin;
 }

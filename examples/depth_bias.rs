@@ -73,34 +73,32 @@ fn setup(
     let top = Vec3::Y * 100.0;
     let bottom = Vec3::Y * -100.0;
     // Show the middle as a vertical red bar.
-    commands.spawn(PolylineBundle {
-        polyline: PolylineHandle(polylines.add(Polyline {
+    commands.spawn((
+        PolylineHandle(polylines.add(Polyline {
             vertices: vec![top, bottom],
         })),
-        material: PolylineMaterialHandle(materials.add(PolylineMaterial {
+        PolylineMaterialHandle(materials.add(PolylineMaterial {
             width: 5.0,
             color: RED.into(),
             depth_bias: -1.0,
             perspective: false,
         })),
-        ..Default::default()
-    });
+    ));
     // Draw from bottom to top, red to purple, -1.0 to 1.0 horizontal lines
     for i in 0..100 {
         let bias = (i as f32) / 50.0 - 1.0;
         let left = Vec3::new(0.0, bias * 35.0, -500.0);
         let right = Vec3::new(0.0, bias * 35.0, 500.0);
-        commands.spawn(PolylineBundle {
-            polyline: PolylineHandle(polylines.add(Polyline {
+        commands.spawn((
+            PolylineHandle(polylines.add(Polyline {
                 vertices: vec![left, right],
             })),
-            material: PolylineMaterialHandle(materials.add(PolylineMaterial {
+            PolylineMaterialHandle(materials.add(PolylineMaterial {
                 width: 1.0,
                 color: Color::hsl((bias + 1.0) / 2.0 * 270.0, 1.0, 0.5).to_linear(),
                 depth_bias: bias,
                 perspective: false,
             })),
-            ..Default::default()
-        });
+        ));
     }
 }

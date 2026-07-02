@@ -59,17 +59,29 @@ impl Plugin for PolylineRenderPlugin {
     }
 }
 
-#[derive(Bundle, Default)]
-pub struct PolylineBundle {
-    pub polyline: PolylineHandle,
-    pub material: PolylineMaterialHandle,
-    pub transform: Transform,
-    pub global_transform: GlobalTransform,
-    /// User indication of whether an entity is visible
-    pub visibility: Visibility,
-    /// Algorithmically-computed indication of whether an entity is visible and should be extracted for rendering
-    pub inherited_visibility: InheritedVisibility,
-    pub view_visibility: ViewVisibility,
+#[deprecated(
+    since = "0.15.0",
+    note = "Use the `PolylineHandle` component instead. \
+            This bundle may be removed in a future release."
+)]
+pub use deprecated_bundle::PolylineBundle;
+
+#[allow(deprecated)]
+mod deprecated_bundle {
+    use super::*;
+
+    #[derive(Bundle, Default)]
+    pub struct PolylineBundle {
+        pub polyline: PolylineHandle,
+        pub material: PolylineMaterialHandle,
+        pub transform: Transform,
+        pub global_transform: GlobalTransform,
+        /// User indication of whether an entity is visible
+        pub visibility: Visibility,
+        /// Algorithmically-computed indication of whether an entity is visible and should be extracted for rendering
+        pub inherited_visibility: InheritedVisibility,
+        pub view_visibility: ViewVisibility,
+    }
 }
 
 #[derive(Debug, Default, Asset, Clone, TypePath)]
